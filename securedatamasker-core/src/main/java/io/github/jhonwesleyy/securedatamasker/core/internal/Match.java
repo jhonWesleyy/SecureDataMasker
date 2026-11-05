@@ -1,4 +1,4 @@
-package io.github.jhonwesleyy.securedatamasker.core.detection;
+package io.github.jhonwesleyy.securedatamasker.core.internal;
 
 import io.github.jhonwesleyy.securedatamasker.core.SensitiveDataType;
 
@@ -7,6 +7,9 @@ import io.github.jhonwesleyy.securedatamasker.core.SensitiveDataType;
  *
  * <p>A match records only where the occurrence is and what type it is, never the matched text, so
  * a match can be logged or stored without exposing the value.
+ *
+ * <p>Internal: produced by the scanner and consumed by the masking step. It is not part of the
+ * public API (ADR-002).
  *
  * @param start the index of the first character of the occurrence, inclusive
  * @param end the index after the last character of the occurrence, exclusive

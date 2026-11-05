@@ -1,6 +1,6 @@
-# ADR-007: Logback in `provided` scope; minimum version 1.5.19
+# ADR-007: Logback in `provided` scope; supported range 1.5.19+ including 1.6.x
 
-- **Status:** Accepted, with one open question (the Logback 1.6 line; see below)
+- **Status:** Accepted (the Logback 1.6 question was resolved by the maintainer on 2026-11-05)
 - **Date:** 2026-11-05
 - **Phase:** 2 (Architecture)
 
@@ -20,20 +20,22 @@ version. Logback before 1.5.19 is affected by CVE-2025-11226 (spec section 8.2).
    - 1.5.19 is the first 1.5.x release with the CVE-2025-11226 fix (GitLab advisory). Supporting
      anything older would mean documenting a vulnerable baseline.
    - The skeleton compiles against 1.5.19, 1.5.38 and 1.6.6.
-3. The build compiles against the minimum by default (`logback.version` = 1.5.19). Other versions
-   are tested with `-Dlogback.version=...`. The CI matrix "minimum × latest" is Phase 3.
+3. **Supported range: 1.5.19 and later, including the 1.6.x line** (maintainer decision,
+   2026-11-05). The build compiles against the minimum by default (`logback.version` = 1.5.19).
+   Other versions are tested with `-Dlogback.version=...`. The Phase 3 CI matrix tests three
+   Logback versions: **1.5.19** (minimum), **the latest 1.5.x** and **the latest 1.6.x**.
 4. Phase 5 must register `%mask` through `PatternLayoutBase.getInstanceConverterMap()`, which
    exists unchanged in 1.5.19 and 1.6.6. It must not use `getDefaultConverterMap()` or the static
    `PatternLayout.defaultConverterMap`, because 1.6.0 removed them (findings, section 1.4).
 
-### Open question: Logback 1.6.x
+### Resolved: Logback 1.6.x
 
-The spec (RNF08 and section 10.1) says "Logback 1.5.x" and calls 1.5 "the active series". As of
-2026-11-05, Maven Central lists 1.6.0 to 1.6.6 as well. 1.6.0 was released on 2026-07-23 and
-removed deprecated APIs. The maintainer decided to **keep RNF08 unchanged** in Phase 2. The PoC
-nevertheless covers 1.6.6, where it passes. Whether to declare 1.6.x supported, and whether 1.5.x
-stays in the matrix, is left to the maintainer. It is recorded in `docs/phase-2-findings.md`,
-section 5.
+The spec (RNF08 and section 10.1) said "Logback 1.5.x" and called 1.5 "the active series". As of
+2026-11-05, Maven Central also lists 1.6.0 to 1.6.6; 1.6.0 was released on 2026-07-23 and removed
+deprecated APIs. The PoC and the skeleton pass on 1.6.6 (findings, section 1). The maintainer
+decided to support 1.5.19+ including 1.6.x and to keep a 1.5.x leg in the CI matrix, because
+applications will stay on 1.5 for some time. The spec was updated accordingly (RNF08, sections
+10.1, 14.2 and 16).
 
 ## Consequences
 

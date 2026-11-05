@@ -2,8 +2,6 @@ package io.github.jhonwesleyy.securedatamasker.core.masking;
 
 import io.github.jhonwesleyy.securedatamasker.core.SensitiveDataType;
 import io.github.jhonwesleyy.securedatamasker.core.detection.DetectionMode;
-import io.github.jhonwesleyy.securedatamasker.core.detection.Match;
-import java.util.List;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
@@ -97,17 +95,6 @@ public final class TextMasker {
      * @return the masked value, or {@link #MASKING_FAILED_MARKER}
      */
     public String maskValue(SensitiveDataType type, CharSequence value) {
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
-
-    /**
-     * Finds every occurrence of the enabled types in a text, after overlap resolution.
-     *
-     * @param text the text to scan
-     * @return the non-overlapping matches, in order of position; an unmodifiable list
-     * @throws IllegalArgumentException if the text is longer than {@link #maxScanLength()}
-     */
-    public List<Match> detect(CharSequence text) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 

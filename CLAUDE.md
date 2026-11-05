@@ -11,13 +11,13 @@ Posicionamento: a biblioteca **reduz** a exposição acidental, não a elimina. 
 ## Estado atual
 
 - **Fase 1 (Discovery): concluída.** A especificação está em `docs/spec.md`.
-- **Fase 2 (Architecture): entregue no branch `phase-2-architecture`, aguardando o gate** (revisão do esqueleto da API pelo mantenedor). Conteúdo:
+- **Fase 2 (Architecture): entregue no branch `phase-2-architecture` (PR #1), gate revisado em 05/11/2026.** Conteúdo:
   - ADRs 001 a 008 em `docs/adr/`;
   - esqueleto da API pública de `securedatamasker-core` e `securedatamasker-logback`: todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`, sem lógica de validação, detecção ou mascaramento;
   - `docs/masking-policy.md` com a tabela final de máscaras;
   - PoC com Logback puro em `securedatamasker-logback/src/test/.../poc/`;
   - `docs/phase-2-findings.md`, com resultados e fontes.
-- **Perguntas abertas para o mantenedor** (seção 5 de `docs/phase-2-findings.md`): suporte ao Logback 1.6.x (a RNF08 continua dizendo 1.5.x); substituição do jqwik; compatibilidade do Jazzer com o JUnit 6; futuro do RF15 (adiado na ADR-006).
+- **Perguntas da Fase 2 respondidas** na revisão do gate (D14 a D18; seção 5 de `docs/phase-2-findings.md`). Falta só o merge do PR #1 pelo mantenedor.
 - **Fase 3 (Foundation): não iniciada.** Os POMs atuais são mínimos de propósito: sem plugins de qualidade, CI, assinatura ou publicação.
 
 Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fase seguinte sem que o gate da anterior tenha sido aprovado pelo mantenedor.
@@ -36,12 +36,16 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | D8 | `MaskingPatternLayoutEncoder` como integração padrão; `%mask(...)` como opção avançada | **Aprovada** |
 | D9 | JSpecify + NullAway | **Aprovada** |
 | D10 | Nome SecureDataMasker, `artifactId` `securedatamasker-*` (único dentro do namespace `io.github.jhonwesleyy`) | **Aprovada** |
-
 | D11 | Objetivo em etapas: projeto de portfólio na série 0.x; biblioteca mantida para terceiros a partir da 1.0, com compatibilidade rigorosa (japicmp) desde então | **Aprovada** |
 | D12 | MVP sem adaptador JSON: só a integração via PatternLayout; RF21/RF22 continuam como funcionalidades futuras | **Aprovada** |
 | D13 | Idioma: código, Javadoc e documentação (`docs/`, CHANGELOG, CONTRIBUTING) em **inglês**. README bilíngue: `README.md` em inglês e `README.pt-BR.md` em português, com link entre eles no topo; no `README.pt-BR.md`, os exemplos de código são **idênticos** aos do inglês e só o texto ao redor é traduzido | **Aprovada** |
+| D14 | Logback suportado: **1.5.19+, incluindo 1.6.x**; matriz do CI com 1.5.19, a última 1.5.x e a última 1.6.x (ADR-007) | **Aprovada** |
+| D15 | jqwik **não** adotado: testes de propriedade com geradores próprios de seed fixa em `@ParameterizedTest` do JUnit | **Aprovada** |
+| D16 | Jazzer só depois de um `@FuzzTest` real rodar no JUnit 6 (Fase 3 ou 4); sem voltar o JUnit para a 5.x | **Aprovada** |
+| D17 | RF15 (detectores customizados) adiado; manter ou cortar é decidido antes da 1.0 (ADR-006) | **Aprovada** |
+| D18 | `TextMasker.detect(...)` fora da API pública; `Match` é interno (ADR-002) | **Aprovada** |
 
-Todas as decisões D1 a D13 foram aprovadas em 04/11/2026. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+As decisões D1 a D13 foram aprovadas em 04/11/2026 e D14 a D18 em 05/11/2026, na revisão do gate da Fase 2. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
 
 Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` (registro da Fase 1) continuam em português. Todo documento criado a partir da Fase 2 segue a D13.
 

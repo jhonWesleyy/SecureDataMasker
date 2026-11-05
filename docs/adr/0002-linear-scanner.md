@@ -46,14 +46,22 @@ unformatted input. `SHAPE_OR_VALIDATED` names both halves: shape when formatted,
 when not. Its Javadoc spells out both halves and the stricter phone rule with examples. This adds
 no behavior beyond D4. The default itself is unchanged.
 
-`TextMasker.detect(CharSequence)` returns `Match(start, end, type)`. A `Match` holds no text, so it
-is safe to log.
+The scanner reports `Match(start, end, type)`. A `Match` holds no text, so it is safe to log. Both
+the scanner and `Match` live in the non-exported `internal` package: the public API exposes
+masking (`TextMasker.mask`, `TextMasker.maskValue`), not detection results.
+
+A public `TextMasker.detect(CharSequence)` returning the matches was drafted during Phase 2 and
+removed at the maintainer's gate review (2026-11-05). No MVP requirement or use case needs it, the
+Phase 4 scanner tests can use the internal type, and adding the method later is compatible while
+removing it after 1.0 is not (D11, CLAUDE.md rule 14).
 
 ## Consequences
 
 - O(n) by construction. ReDoS is ruled out on the hot path, not just mitigated.
 - More hand-written code to test. The counterweight is property-based tests and fuzzing (spec
-  section 13). The tool choice is open: see `docs/phase-2-findings.md` (jqwik, Jazzer).
+  section 13). Property tests use seeded generators in JUnit parameterized tests, not jqwik;
+  Jazzer is adopted only after a real `@FuzzTest` runs on JUnit 6 (maintainer decision,
+  2026-11-05; `docs/phase-2-findings.md`, section 5).
 - Adding a type means changing the scanner, which is acceptable while the type set is closed
   (ADR-006).
 - Non-ASCII digits are not detected (threat T8). This is documented as a limit.

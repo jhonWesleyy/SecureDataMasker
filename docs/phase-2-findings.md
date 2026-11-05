@@ -205,22 +205,24 @@ replacement would be seeded generators in JUnit.
 | L6 | Logback before 1.5.19 has CVE-2025-11226, code execution through `<if>` conditions (8.2) | **Confirmed**, with a precision | GitLab advisory: affected below 1.3.16 and from 1.4.0 up to, but not including, 1.5.19; fixed in 1.5.19 and 1.3.16. Exploitation needs Janino and Spring on the class path and existing privileges. Within the 1.5 line, the statement is exact |
 | L7 | Matrix 8.1, "`%mask(%msg)`: exception covered only if `%ex` is inside `%mask`" | **Confirmed** | Follows from L1 and L3 |
 | L8 | `TurboFilter`/`Filter` can only accept or deny, not rewrite (11.2; listed because 8.1 relies on it) | **Confirmed** | Source: `TurboFilter.decide(...)` and `Filter.decide(...)` return `FilterReply` (`DENY`, `NEUTRAL`, `ACCEPT`) |
-| L9 | "The 1.5 series is the active one and requires Java 11+" (10.1; RNF08 says "Logback 1.5.x") | **Refuted in part** | Java 11 is **confirmed**: `jdk.version` is 11 in the parent POMs of 1.5.38 and 1.6.6. "The 1.5 series is the active one" is **refuted**: 1.6.0 was released on 2026-07-23 ([release][lb-160]) and 1.6.6 is the latest on Maven Central. 1.5.38 is still being published, so 1.5 is maintained, but it is no longer the only or the newest line. Raised with the maintainer; RNF08 left unchanged (ADR-007) |
+| L9 | "The 1.5 series is the active one and requires Java 11+" (10.1; RNF08 says "Logback 1.5.x") | **Refuted in part** | Java 11 is **confirmed**: `jdk.version` is 11 in the parent POMs of 1.5.38 and 1.6.6. "The 1.5 series is the active one" is **refuted**: 1.6.0 was released on 2026-07-23 ([release][lb-160]) and 1.6.6 is the latest on Maven Central. 1.5.38 is still being published, so 1.5 is maintained, but it is no longer the only or the newest line. Resolved: the maintainer chose to support 1.5.19+ including 1.6.x; RNF08 updated (ADR-007, section 5) |
 | L10 | "The `CompositeConverter` / `ClassicConverter` API has been stable for many versions" (10.1) | **Confirmed for the converters, not for registration** | `CompositeConverter` (`transform`, `getChildConverter`) is identical in 1.5.19 and 1.6.6. Registering converters programmatically changed in 1.6.0 (section 1.4, item 1) |
 
-## 5. Open questions for the maintainer
+## 5. Maintainer decisions (gate review, 2026-11-05)
 
-1. **Logback 1.6.x (L9).** Should RNF08 and spec section 10.1 say "Logback 1.5.19+ including
-   1.6.x"? And should the CI matrix (Phase 3) be "1.5.19 × latest 1.6.x", or keep a 1.5.x leg?
-   The PoC and the skeleton already pass on 1.6.6.
-2. **jqwik (section 3).** Replace jqwik in spec sections 10.4 and 13 with seeded JUnit generators
-   (and Jazzer where it fits)? The recommendation is yes, for the reasons above.
-3. **Jazzer and JUnit 6.** Confirm adoption only after a real `@FuzzTest` runs on JUnit 6.1.3
-   (Phase 3/4), or keep JUnit on 5.x for the fuzzing module?
-4. **RF15 / open type model (ADR-006).** If custom detectors are wanted at all, the type model must
-   change before 1.0. Is RF15 still wanted?
-5. **CI per-JDK `MAVEN_OPTS` (section 1.5).** This is a Phase 3 concern, noted here so it is not
-   lost.
+The questions raised by this phase were answered by the maintainer at the gate review:
+
+| # | Question | Decision | Recorded in |
+| --- | --- | --- | --- |
+| 1 | Logback 1.6.x (L9) | Support **1.5.19 and later, including 1.6.x**. The Phase 3 CI matrix tests three Logback versions: 1.5.19 (minimum), the latest 1.5.x and the latest 1.6.x | ADR-007; spec RNF08, 10.1, 14.2, 16 |
+| 2 | jqwik (section 3) | **Not adopted.** Property tests use seeded generators in JUnit parameterized tests, with no new dependency | Spec 10.4, 13; ADR-002 |
+| 3 | Jazzer and JUnit 6 | Adopt **only after a real `@FuzzTest` runs on JUnit 6** (Phase 3 or 4). JUnit is not downgraded to 5.x for fuzzing; if Jazzer does not work on JUnit 6, fuzzing uses the seeded generators | Spec 10.4; ADR-002 |
+| 4 | RF15 / open type model (ADR-006) | Stays **deferred**: out of the MVP, keep-or-cut decided before 1.0 | ADR-006 |
+| 5 | CI per-JDK `MAVEN_OPTS` (section 1.5) | Phase 3 concern, no decision needed now | This document |
+
+One more change came out of the same review: `TextMasker.detect(CharSequence)`, which the skeleton
+had added to the public API, was **removed**, and `Match` moved to the non-exported `internal`
+package (ADR-002).
 
 ## Sources
 

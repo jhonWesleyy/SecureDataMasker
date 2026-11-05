@@ -35,7 +35,8 @@ non-functional. Removing it after 1.0 would break compatibility (CLAUDE.md rule 
    - overlap priority for custom types relative to the built-in ones.
 
    Turning the enum into such a type is a breaking change. So the decision must be made **before
-   1.0**, in its own ADR. It is listed as an open question in `docs/phase-2-findings.md`.
+   1.0**, in its own ADR. The maintainer confirmed on 2026-11-05 that RF15 stays out of the MVP
+   and that keeping or cutting it is decided before 1.0.
 
 ## Consequences
 

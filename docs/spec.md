@@ -137,7 +137,7 @@ Prioridade: **M** = MVP obrigatório, **S** = desejável no MVP, **F** = futuro.
 | RNF05 | Desempenho | Mensagem sem candidatos (sem dígito e sem `@`) custa uma varredura e zero alocações extras | JMH com `-prof gc` |
 | RNF06 | Desempenho | Sobrecarga típica abaixo de 1 µs por mensagem de 200 caracteres com um CPF \[Hipótese: meta a confirmar com JMH\] | JMH |
 | RNF07 | Concorrência | Componentes imutáveis e thread-safe após a construção; sem estado global mutável | Revisão + teste concorrente |
-| RNF08 | Compatibilidade | Java 21+ (compilado com --release 21 no JDK 25); Logback 1.5.x; SLF4J 2.x | Matriz no CI |
+| RNF08 | Compatibilidade | Java 21+ (compilado com --release 21 no JDK 25); Logback 1.5.19+, incluindo 1.6.x (decisão de 05/11/2026, ADR-007); SLF4J 2.x | Matriz no CI: Logback 1.5.19, última 1.5.x e última 1.6.x |
 | RNF09 | Modularidade | `module-info.java` exportando só os pacotes públicos; pacotes `internal` não exportados | Compilação modular no CI |
 | RNF10 | Determinismo | Mesma entrada e mesma configuração produzem a mesma saída, sem dependência de locale, fuso ou ordem de iteração | Testes com `Locale` e `TimeZone` alterados |
 | RNF11 | Manutenibilidade | API pública com Javadoc completo; compatibilidade binária verificada a partir da 1.0 | `javadoc -Xdoclint`, japicmp |
@@ -364,7 +364,7 @@ Java 21 como versão mínima (desenvolvimento no JDK 25), Maven como build e o m
 | --- | --- | --- |
 | Java (base) | **21** \[Aprovado, D1\] — compilado no JDK 25 com `--release 21` | \[Fato\] O Premier Support da Oracle para o JDK 17 terminou em 30/09/2026 e o Temurin 17 vai até 31/10/2027; o Temurin 21 vai até 31/12/2029. A 1.0 da biblioteca deve sair em 2027, quando o 17 já estará saindo de cena. O 21 ainda traz `switch` com pattern matching e record patterns, úteis para o `ValidationResult` (`sealed`) e para o despacho por tipo. Custo aceito: aplicações que ainda estão no 17 ficam de fora. Com `--release 21`, os recursos de linguagem e as APIs posteriores ao 21 não são usados. |
 | Matriz de teste | 21 e 25 (LTS) | Detecta regressões de JDK cedo |
-| Logback | **1.5.x**, mínimo a definir ≥ 1.5.19 | \[Fato\] A série 1.5 é a ativa e exige Java 11+; a 1.3.x (Java 8) fica fora. A 1.5.19 corrigiu a CVE-2025-11226. A API de `CompositeConverter` / `ClassicConverter` é estável há muitas versões. |
+| Logback | **1.5.19+, incluindo 1.6.x** \[Aprovado em 05/11/2026, ADR-007\] | \[Fato\] As séries 1.5 e 1.6 exigem Java 11+; a 1.3.x (Java 8) fica fora. A 1.6.0 saiu em 23/07/2026 e removeu APIs depreciadas; a 1.5.x continua recebendo releases. A 1.5.19 corrigiu a CVE-2025-11226. A API de `CompositeConverter` é igual na 1.5.19 e na 1.6.6, mas o registro programático de converters mudou na 1.6.0 (`docs/phase-2-findings.md`). |
 | SLF4J | 2.0.x (via Logback) | Necessário para os key-value pairs da API fluente |
 | Módulos | `module-info.java` real | Encapsula o pacote `internal`; facilita uso em `jlink` |
 | Anotações de nulidade | JSpecify \[Aprovado, D9\] | Contrato de nulidade na API pública. É a única dependência candidata no `core`: só anotações, escopo de compilação, sem código em runtime. |
@@ -398,8 +398,8 @@ Java 21 como versão mínima (desenvolvimento no JDK 25), Maven como build e o m
 | Ferramenta | Uso |
 | --- | --- |
 | JUnit Jupiter + AssertJ | Testes unitários e de integração |
-| jqwik | Property-based testing \[Hipótese: conferir o estado de manutenção atual antes de adotar\] |
-| Jazzer | Fuzzing do scanner \[Hipótese: conferir licença e manutenção atuais; alternativa: geradores adversariais no jqwik\] |
+| Geradores próprios com seed fixa (JUnit `@ParameterizedTest`) | Testes de propriedade, sem dependência nova. O jqwik **não** foi adotado (decisão de 05/11/2026): está em modo de manutenção, não tem versão para o JUnit 6 e imprime na saída dos testes texto dirigido a agentes de IA (`docs/phase-2-findings.md`, seção 3) |
+| Jazzer | Fuzzing do scanner. Licença Apache-2.0 confirmada; adoção **somente depois** de um `@FuzzTest` real rodar no JUnit 6 (Fase 3 ou 4). Sem voltar o JUnit para a 5.x; se não funcionar, o fuzzing usa os geradores próprios |
 | JMH | Benchmarks do caminho quente, em módulo não publicado |
 | Logback real (`ListAppender` / `OutputStreamAppender` em memória) | Integração sem mocks |
 
@@ -447,7 +447,7 @@ Cada camada tem o tipo de teste que encontra os defeitos dela: exemplos e propri
 | Camada | Tipo de teste | Exemplos de casos |
 | --- | --- | --- |
 | Validadores | Unitário parametrizado | DV correto e incorreto em cada posição; sequências repetidas; tamanho 10/11/12; caracteres inválidos; `null` e vazio; CNPJ com minúsculas; CNPJ alfanumérico do exemplo oficial da Receita (`12.ABC.345/01DE-35`); DDD inexistente; fixo começando com 9; Pix EVP com UUID maiúsculo; e-mail com 78 caracteres como chave Pix |
-| Validadores | Propriedades (jqwik) | `isValid(gerar())` sempre verdadeiro; trocar qualquer dígito invalida (com a exceção conhecida do módulo 11 documentada); `normalize(format(x)) == x`; nenhuma entrada lança exceção não tipada |
+| Validadores | Propriedades (geradores com seed fixa no JUnit) | `isValid(gerar())` sempre verdadeiro; trocar qualquer dígito invalida (com a exceção conhecida do módulo 11 documentada); `normalize(format(x)) == x`; nenhuma entrada lança exceção não tipada |
 | Mascaramento | Unitário + propriedades | Toda política preserva os separadores quando configurada; a saída nunca contém o trecho original oculto; máscara de comprimento fixo; idempotência `mask(mask(x)) == mask(x)` |
 | Scanner | Propriedades + fuzzing | Várias ocorrências por mensagem; adjacência (`CPF:12345678909,11912345678`); sobreposição CPF/telefone; dados dentro de JSON, URL e XML; Unicode (emoji, RTL, largura zero, dígitos não ASCII como falso negativo esperado); entradas de 1 MB; nenhuma exceção e tempo limitado com `assertTimeoutPreemptively` |
 | Falsos positivos | Corpus | UUIDs, hashes SHA-1/SHA-256, timestamps epoch em ms, IDs de pedido, IPs, números de versão: a taxa medida é publicada na documentação |
@@ -489,7 +489,7 @@ A documentação é escrita junto com o código de cada fase, nunca antes dele: 
 
 | Workflow | Gatilho | Jobs | Permissões |
 | --- | --- | --- | --- |
-| `ci.yml` | push, PR | Spotless check → compile (Error Prone) → testes unitários → testes de integração → SpotBugs/FindSecBugs → JaCoCo gate → `module-info` e Javadoc lint; matriz JDK 21/25 × Logback mínimo/último; relatórios como artefatos | `contents: read` |
+| `ci.yml` | push, PR | Spotless check → compile (Error Prone) → testes unitários → testes de integração → SpotBugs/FindSecBugs → JaCoCo gate → `module-info` e Javadoc lint; matriz JDK 21/25 × Logback 1.5.19, última 1.5.x e última 1.6.x; relatórios como artefatos | `contents: read` |
 | `ci.yml` (PR) | PR | `actions/dependency-review-action`, que bloqueia dependência nova com CVE ou licença incompatível | `contents: read`, `pull-requests: write` só nesse job |
 | `codeql.yml` | push, PR, semanal | CodeQL Java (`security-extended`) | `security-events: write` |
 | `nightly` (no `ci.yml`, via `schedule`) | diário | PIT, fuzzing longo, OSV-Scanner | `contents: read` |
@@ -535,7 +535,7 @@ Oito fases em sequência, cada uma fechada por um *gate* verificável. A fase se
 - [ ] Entradas adversariais de 1 MB são processadas em tempo linear, sem exceção (limite exato definido após a primeira rodada de JMH).
 - [ ] Falha simulada no detector produz saída fail-closed, e o Logback continua funcionando.
 - [ ] `core` sem dependências em runtime, conferido no CI.
-- [ ] CI verde na matriz JDK 21/25 × Logback mínimo/último.
+- [ ] CI verde na matriz JDK 21/25 × Logback 1.5.19, última 1.5.x e última 1.6.x.
 - [ ] Cobertura e mutation score nos limites da seção 13.2.
 - [ ] Build reproduzível verificado; artefatos assinados; SBOM e proveniência publicados.
 - [ ] README com a matriz "protege / não protege" e o aviso sobre LGPD.
