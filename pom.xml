@@ -74,6 +74,10 @@
     <maven-help-plugin.version>3.5.2</maven-help-plugin.version>
     <maven-toolchains-plugin.version>3.3.0</maven-toolchains-plugin.version>
 
+    <!-- D9: Error Prone + NullAway in JSpecify mode (docs/phase-2-findings.md, section 2). -->
+    <error-prone.version>2.52.0</error-prone.version>
+    <nullaway.version>0.14.3</nullaway.version>
+
     <!-- ADR-009: Spotless with palantir-java-format. -->
     <spotless-maven-plugin.version>3.11.0</spotless-maven-plugin.version>
     <palantir-java-format.version>2.103.0</palantir-java-format.version>
@@ -131,6 +135,47 @@
             -->
             <fork>true</fork>
             <release>${maven.compiler.release}</release>
+            <!-- Every javac and Error Prone warning fails the build. -->
+            <failOnWarning>true</failOnWarning>
+            <showWarnings>true</showWarnings>
+            <compilerArgs>
+              <!--
+                All lint categories except "exports": it flags every JSpecify @Nullable in the
+                exported API because module-info declares "requires static org.jspecify" (ADR-001)
+                rather than "requires static transitive". Changing module-info is outside Phase 3;
+                the open question is recorded in docs/phase-3-findings.md.
+              -->
+              <arg>-Xlint:all,-exports</arg>
+              <arg>-XDcompilePolicy=simple</arg>
+              <arg>--should-stop=ifError=FLOW</arg>
+              <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=io.github.jhonwesleyy.securedatamasker -XepOpt:NullAway:JSpecifyMode=true -Xep:DoNotCallSuggester:OFF</arg>
+              <!--
+                The javac process is forked (toolchain), so .mvn/jvm.config does not reach it:
+                the jdk.compiler exports Error Prone needs are passed with -J.
+              -->
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+              <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+              <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+              <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+            </compilerArgs>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>${error-prone.version}</version>
+              </path>
+              <path>
+                <groupId>com.uber.nullaway</groupId>
+                <artifactId>nullaway</artifactId>
+                <version>${nullaway.version}</version>
+              </path>
+            </annotationProcessorPaths>
           </configuration>
         </plugin>
         <plugin>

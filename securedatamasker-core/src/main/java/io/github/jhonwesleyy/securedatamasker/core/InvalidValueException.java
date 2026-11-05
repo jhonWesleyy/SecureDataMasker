@@ -19,6 +19,9 @@ public final class InvalidValueException extends IllegalArgumentException {
     private static final long serialVersionUID = 1L;
 
     /** The typed reason why the input was rejected. */
+    // Phase 3: the skeleton's reason() throws, so the field is never read yet. Remove the
+    // suppression when Phase 4 implements it (docs/phase-3-findings.md).
+    @SuppressWarnings("UnusedVariable")
     private final ValidationFailure reason;
 
     /**

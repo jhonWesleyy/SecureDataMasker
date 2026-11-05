@@ -72,8 +72,9 @@ public final class Cnpj {
     }
 
     /**
-     * Returns the CNPJ masked with the {@code BALANCED} policy, for example {@code
-     * **.***.***&#47;****-**}.
+     * Returns the CNPJ masked with the {@code BALANCED} policy, for example
+     * <code>**.***.***&#47;****-**</code> (written as an HTML entity because the character
+     * sequence would close this comment).
      *
      * @return the masked CNPJ; never the value in clear
      */
