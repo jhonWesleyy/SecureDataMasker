@@ -1,0 +1,172 @@
+# Build, quality gates and the test matrix (docs/spec.md, section 14.2; CONTRIBUTING.md).
+#
+# Every job compiles with the JDK 25 toolchain (--release 21, D1); matrix.jdk only selects the JDK
+# that runs the tests (Surefire jdkToolchain). Nothing is compiled on JDK 21.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Findings 1.5: no JDK-25-only option may reach a JDK 21 JVM. Maven itself always runs on JDK 25
+  # and Surefire forks do not inherit MAVEN_OPTS, but it is cleared explicitly so that nothing set
+  # on the runner leaks in.
+  MAVEN_OPTS: ""
+
+jobs:
+  logback-versions:
+    name: Resolve Logback matrix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      versions: ${{ steps.read.outputs.versions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read minimum and latest Logback versions
+        id: read
+        # Minimum: the parent POM (ADR-007, never bumped by Dependabot).
+        # Latest 1.5.x and 1.6.x: .github/logback-matrix/*/pom.xml (kept current by Dependabot).
+        run: |
+          read_version() {
+            sed -n 's:.*<logback\.version>\(.*\)</logback\.version>.*:\1:p' "$1"
+          }
+          minimum=$(read_version pom.xml)
+          latest15=$(read_version .github/logback-matrix/1.5/pom.xml)
+          latest16=$(read_version .github/logback-matrix/1.6/pom.xml)
+          for v in "$minimum" "$latest15" "$latest16"; do
+            [[ "$v" =~ ^1\.[56]\.[0-9]+$ ]] || { echo "::error::Unexpected Logback version '$v'"; exit 1; }
+          done
+          [[ "$minimum" == 1.5.19 ]] || { echo "::error::The supported minimum must stay 1.5.19 (ADR-007), found $minimum"; exit 1; }
+          [[ "$latest15" == 1.5.* ]] || { echo "::error::latest 1.5.x leg is $latest15"; exit 1; }
+          [[ "$latest16" == 1.6.* ]] || { echo "::error::latest 1.6.x leg is $latest16"; exit 1; }
+          echo "versions=[\"$minimum\",\"$latest15\",\"$latest16\"]" >> "$GITHUB_OUTPUT"
+          echo "Logback matrix: $minimum (minimum), $latest15 (latest 1.5.x), $latest16 (latest 1.6.x)" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: Test JDK ${{ matrix.jdk }} / Logback ${{ matrix.logback }}
+    needs: logback-versions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: ["21", "25"]
+        logback: ${{ fromJSON(needs.logback-versions.outputs.versions) }}
+    env:
+      TEST_JDK: ${{ matrix.jdk }}
+      LOGBACK_VERSION: ${{ matrix.logback }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 21 and JDK 25
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          # Both are registered in ~/.m2/toolchains.xml; the last one (25) is JAVA_HOME and runs Maven.
+          java-version: |
+            21
+            25
+          cache: maven
+
+      - name: Show toolchains
+        run: |
+          java -version
+          cat ~/.m2/toolchains.xml
+
+      - name: Formatting (Spotless)
+        run: ./mvnw -B -ntp spotless:check
+
+      - name: Compile (Error Prone, NullAway), test, SpotBugs, Javadoc lint, JaCoCo report
+        run: >-
+          ./mvnw -B -ntp verify
+          -Dspotless.check.skip=true
+          -Dtest.jdk="$TEST_JDK"
+          -Dlogback.version="$LOGBACK_VERSION"
+
+      - name: Check that the tests ran on JDK ${{ matrix.jdk }}
+        run: |
+          for report in securedatamasker-*/target/surefire-reports/TEST-*.xml; do
+            version=$(grep -o '<property name="java.specification.version" value="[^"]*"' "$report" | sed 's/.*value="//; s/"$//')
+            echo "$report: java.specification.version=$version"
+            [[ "$version" == "$TEST_JDK" ]] || { echo "::error::$report ran on Java $version, expected $TEST_JDK"; exit 1; }
+          done
+
+      - name: Check module descriptors (RNF04, RNF09)
+        run: |
+          describe() { jar --describe-module --file "$1" | tail -n +2 | sed '/^$/d' | sort; }
+          diff -u <(printf '%s\n' \
+              'contains io.github.jhonwesleyy.securedatamasker.core.internal' \
+              'exports io.github.jhonwesleyy.securedatamasker.core' \
+              'exports io.github.jhonwesleyy.securedatamasker.core.detection' \
+              'exports io.github.jhonwesleyy.securedatamasker.core.masking' \
+              'exports io.github.jhonwesleyy.securedatamasker.core.validation' \
+              'requires java.base mandated' \
+              'requires org.jspecify static' | sort) \
+            <(describe securedatamasker-core/target/securedatamasker-core-*-SNAPSHOT.jar)
+          diff -u <(printf '%s\n' \
+              'exports io.github.jhonwesleyy.securedatamasker.logback' \
+              'requires ch.qos.logback.classic' \
+              'requires ch.qos.logback.core' \
+              'requires io.github.jhonwesleyy.securedatamasker.core' \
+              'requires java.base mandated' \
+              'requires org.jspecify static' | sort) \
+            <(describe securedatamasker-logback/target/securedatamasker-logback-*-SNAPSHOT.jar)
+
+      - name: Check that core has no runtime dependencies (RNF04)
+        run: |
+          ./mvnw -B -ntp -q dependency:tree -pl securedatamasker-core -Dscope=runtime \
+            -DoutputFile=target/runtime-dependencies.txt
+          cat securedatamasker-core/target/runtime-dependencies.txt
+          lines=$(wc -l < securedatamasker-core/target/runtime-dependencies.txt)
+          [[ "$lines" -eq 1 ]] || { echo "::error::securedatamasker-core has runtime dependencies"; exit 1; }
+
+      - name: Upload test and quality reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-jdk${{ matrix.jdk }}-logback${{ matrix.logback }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            securedatamasker-*/target/surefire-reports/
+            securedatamasker-*/target/site/jacoco/
+            securedatamasker-*/target/spotbugsXml.xml
+            securedatamasker-*/target/reports/apidocs/
+            securedatamasker-core/target/runtime-dependencies.txt
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: low
+          comment-summary-in-pr: on-failure
+          # Licenses compatible with distributing an Apache-2.0 library. Logback is dual
+          # EPL-1.0 / LGPL-2.1 and is never bundled (provided scope, ADR-007).
+          allow-licenses: >-
+            Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC,
+            EPL-1.0, EPL-2.0, LGPL-2.1-only, LGPL-2.1-or-later

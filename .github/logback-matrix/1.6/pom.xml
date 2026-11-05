@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Not a build module: a version record for the CI matrix (CONTRIBUTING.md, "Logback versions").
+
+  logback.version below is the "latest 1.6.x" leg of .github/workflows/ci.yml. Dependabot keeps
+  it current (.github/dependabot.yml, directory /.github/logback-matrix/1.6) and never moves it
+  to another release line. The supported minimum (1.5.19, ADR-007) lives in the parent pom.xml and
+  is excluded from Dependabot.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.jhonwesleyy</groupId>
+  <artifactId>securedatamasker-logback-matrix-1.6</artifactId>
+  <version>0</version>
+  <packaging>pom</packaging>
+
+  <properties>
+    <logback.version>1.6.6</logback.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+  </dependencies>
+</project>

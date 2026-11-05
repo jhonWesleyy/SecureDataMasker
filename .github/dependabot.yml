@@ -1,0 +1,57 @@
+# Dependabot version updates: weekly and grouped (docs/spec.md, section 14.2).
+#
+# Logback has three entries on purpose (CONTRIBUTING.md, "Logback versions"):
+# - "/" (the build): logback-classic is IGNORED. Its version there is the supported minimum,
+#   1.5.19 (ADR-007), and must only change by a maintainer decision.
+# - "/.github/logback-matrix/1.5" and "/.github/logback-matrix/1.6": the "latest 1.5.x" and
+#   "latest 1.6.x" legs of the CI matrix. Each is kept current within its own release line.
+# Ignore rules match a dependency name, not a POM property, so the minimum and the latest legs
+# cannot share one POM.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      maven:
+        patterns:
+          - "*"
+    ignore:
+      # ADR-007: logback.version in pom.xml is the supported minimum. Never bump it.
+      - dependency-name: ch.qos.logback:logback-classic
+
+  - package-ecosystem: maven
+    directory: /.github/logback-matrix/1.5
+    schedule:
+      interval: weekly
+    groups:
+      logback-1-5:
+        patterns:
+          - "*"
+    ignore:
+      # This leg tracks the latest 1.5.x only; 1.6.x has its own leg.
+      - dependency-name: ch.qos.logback:logback-classic
+        versions: [">= 1.6"]
+
+  - package-ecosystem: maven
+    directory: /.github/logback-matrix/1.6
+    schedule:
+      interval: weekly
+    groups:
+      logback-1-6:
+        patterns:
+          - "*"
+    ignore:
+      # This leg tracks the latest 1.6.x only. A new release line (1.7) is a maintainer decision.
+      - dependency-name: ch.qos.logback:logback-classic
+        versions: [">= 1.7"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
