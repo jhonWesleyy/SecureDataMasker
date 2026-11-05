@@ -55,8 +55,11 @@ class ImplicitThrowablePocTest {
     @Test
     void reportsTheLogbackVersionUnderTest() {
         String expected = System.getProperty("poc.logback.version");
-        String jar =
-                LoggerContext.class.getProtectionDomain().getCodeSource().getLocation().toString();
+        String jar = LoggerContext.class
+                .getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toString();
         System.out.println("[PoC] logback-classic loaded from: " + jar);
         if (expected != null) {
             assertTrue(
@@ -94,8 +97,7 @@ class ImplicitThrowablePocTest {
 
     @Test
     void replaceWrappingExMasksTheThrowableAndSuppressesTheImplicitOne() {
-        String out =
-                render(patternEncoder("%replace(%msg%n%ex){'" + CPF_REGEX + "', '" + CPF_MASK + "'}"));
+        String out = render(patternEncoder("%replace(%msg%n%ex){'" + CPF_REGEX + "', '" + CPF_MASK + "'}"));
 
         assertFalse(out.contains(CPF), "no CPF in clear anywhere: " + out);
         assertTrue(out.contains("invalid document " + CPF_MASK), out);
@@ -140,10 +142,7 @@ class ImplicitThrowablePocTest {
 
         Logger logger = context.getLogger("poc");
         logger.addAppender(appender);
-        logger.error(
-                "payment rejected for customer {}",
-                CPF,
-                new IllegalStateException("invalid document " + CPF));
+        logger.error("payment rejected for customer {}", CPF, new IllegalStateException("invalid document " + CPF));
         appender.stop();
         logger.detachAppender(appender);
 

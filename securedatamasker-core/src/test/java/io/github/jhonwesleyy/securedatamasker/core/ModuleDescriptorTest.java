@@ -21,15 +21,12 @@ class ModuleDescriptorTest {
     void exportsOnlyThePublicApiPackages() throws IOException {
         ModuleDescriptor descriptor = readCompiledDescriptor();
 
-        Set<String> exported =
-                descriptor.exports().stream()
-                        .map(ModuleDescriptor.Exports::source)
-                        .collect(Collectors.toSet());
+        Set<String> exported = descriptor.exports().stream()
+                .map(ModuleDescriptor.Exports::source)
+                .collect(Collectors.toSet());
 
         assertEquals(BASE, descriptor.name());
-        assertEquals(
-                Set.of(BASE, BASE + ".validation", BASE + ".detection", BASE + ".masking"),
-                exported);
+        assertEquals(Set.of(BASE, BASE + ".validation", BASE + ".detection", BASE + ".masking"), exported);
         assertTrue(descriptor.packages().contains(BASE + ".internal"), "internal package exists");
         assertTrue(descriptor.exports().stream().noneMatch(ModuleDescriptor.Exports::isQualified));
         assertTrue(descriptor.opens().isEmpty(), "no package is opened for reflection");
@@ -39,11 +36,10 @@ class ModuleDescriptorTest {
     void hasNoRuntimeModuleDependencies() throws IOException {
         ModuleDescriptor descriptor = readCompiledDescriptor();
 
-        Set<String> nonStatic =
-                descriptor.requires().stream()
-                        .filter(r -> !r.modifiers().contains(ModuleDescriptor.Requires.Modifier.STATIC))
-                        .map(ModuleDescriptor.Requires::name)
-                        .collect(Collectors.toSet());
+        Set<String> nonStatic = descriptor.requires().stream()
+                .filter(r -> !r.modifiers().contains(ModuleDescriptor.Requires.Modifier.STATIC))
+                .map(ModuleDescriptor.Requires::name)
+                .collect(Collectors.toSet());
 
         assertEquals(Set.of("java.base"), nonStatic, "RNF04: no runtime dependencies");
     }

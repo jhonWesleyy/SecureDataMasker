@@ -15,7 +15,8 @@ import java.io.Serial;
  */
 public final class InvalidValueException extends IllegalArgumentException {
 
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     /** The typed reason why the input was rejected. */
     private final ValidationFailure reason;
