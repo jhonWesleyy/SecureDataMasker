@@ -1,13 +1,15 @@
 # SecureDataMasker
 
-Biblioteca Java para validar, normalizar e mascarar dados sensíveis brasileiros (CPF, CNPJ, e-mail, telefone e chave Pix), com integração ao Logback para reduzir a exposição desses dados em logs.
+[English](README.md) | [Português (Brasil)](README.pt-BR.md)
 
-> **Status: em especificação.** Ainda não existe código nem versão publicada. Nada descrito aqui pode ser usado por enquanto.
+A Java library to validate, normalize and mask Brazilian sensitive data (CPF, CNPJ, e-mail, phone number and Pix key), with Logback integration to reduce the exposure of that data in logs.
 
-## Documentação
+> **Status: under specification.** There is no code and no published release yet. Nothing described here can be used at this point.
 
-- [Especificação técnica (Fase 1: Discovery)](docs/spec.md): problema, requisitos, threat model, arquitetura proposta, roadmap e critérios de aceitação.
+## Documentation
 
-## Licença
+- [Technical specification (Phase 1: Discovery)](docs/spec.md) — written in Portuguese: problem, requirements, threat model, proposed architecture, roadmap and acceptance criteria.
 
-Apache-2.0 (o arquivo `LICENSE` será adicionado na Fase 3).
+## License
+
+Apache-2.0 (the `LICENSE` file will be added in Phase 3).

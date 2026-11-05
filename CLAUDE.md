@@ -30,7 +30,13 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | D9 | JSpecify + NullAway | **Aprovada** |
 | D10 | Nome SecureDataMasker, `artifactId` `securedatamasker-*` (único dentro do namespace `io.github.jhonwesleyy`) | **Aprovada** |
 
-Todas as decisões D1 a D10 foram aprovadas em 04/11/2026. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+| D11 | Objetivo em etapas: projeto de portfólio na série 0.x; biblioteca mantida para terceiros a partir da 1.0, com compatibilidade rigorosa (japicmp) desde então | **Aprovada** |
+| D12 | MVP sem adaptador JSON: só a integração via PatternLayout; RF21/RF22 continuam como funcionalidades futuras | **Aprovada** |
+| D13 | Idioma: código, Javadoc e documentação (`docs/`, CHANGELOG, CONTRIBUTING) em **inglês**. README bilíngue: `README.md` em inglês e `README.pt-BR.md` em português, com link entre eles no topo; no `README.pt-BR.md`, os exemplos de código são **idênticos** aos do inglês e só o texto ao redor é traduzido | **Aprovada** |
+
+Todas as decisões D1 a D13 foram aprovadas em 04/11/2026. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+
+Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` (registro da Fase 1) continuam em português. Todo documento criado a partir da Fase 2 segue a D13.
 
 ## Regras obrigatórias
 

@@ -572,11 +572,13 @@ As máscaras têm comprimento fixo: o número de `*` não revela o tamanho do or
 
 CPF e CNPJ ficam totalmente ocultos no `BALANCED` de propósito: os dígitos visíveis seriam os verificadores, que ajudam pouco na depuração e dão informação sobre os demais. Quem precisa correlacionar eventos terá a pseudonimização por HMAC (RF16) no futuro, que é a ferramenta certa para isso.
 
-### Perguntas abertas, sem recomendação minha
+### Perguntas abertas: respondidas em 04/11/2026
 
-- O projeto é principalmente **portfólio** ou você pretende **mantê-lo** como biblioteca usada por terceiros? Isso muda o rigor de compatibilidade da série 0.x e o esforço em RF21 (JSON).
-- Algum consumidor concreto já usa encoder JSON (`logstash-logback-encoder`) em produção? Se sim, RF22 sobe para dentro do MVP, porque sem ele o produto não protege o destino que realmente importa para esse usuário.
-- Idioma da documentação e do Javadoc: inglês (alcance no Central), português (público é brasileiro) ou README bilíngue?
+| ID | Pergunta | Resposta |
+| --- | --- | --- |
+| D11 | Portfólio ou biblioteca mantida? | **Os dois, em etapas**: portfólio na série 0.x; biblioteca mantida a partir da 1.0, com compatibilidade rigorosa desde então |
+| D12 | Algum consumidor usa encoder JSON em produção? | **Não/não sei**: o MVP fica só com PatternLayout; RF21 e RF22 continuam como futuras |
+| D13 | Idioma da documentação | Código, Javadoc e `docs/` em **inglês**; `README.md` em inglês e `README.pt-BR.md` em português, com link entre eles e exemplos de código idênticos |
 
 ## Fontes
 
