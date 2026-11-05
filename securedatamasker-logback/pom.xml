@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.jhonwesleyy</groupId>
+    <artifactId>securedatamasker-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>securedatamasker-logback</artifactId>
+  <name>SecureDataMasker Logback</name>
+  <description>Logback integration for SecureDataMasker: the %mask converter and MaskingPatternLayoutEncoder.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.jhonwesleyy</groupId>
+      <artifactId>securedatamasker-core</artifactId>
+    </dependency>
+
+    <!-- ADR-007: the application chooses its Logback version. -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jspecify</groupId>
+      <artifactId>jspecify</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Lets the Phase 2 PoC assert which Logback jar it actually ran against. -->
+          <systemPropertyVariables>
+            <poc.logback.version>${logback.version}</poc.logback.version>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
