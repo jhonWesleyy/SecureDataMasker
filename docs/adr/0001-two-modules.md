@@ -24,9 +24,12 @@ Inside `core`, dependencies point one way only: `masking → detection → valid
 value types are in the base package `...core`. Implementation details live in `...core.internal`,
 which `module-info.java` does not export (RNF09).
 
-JSpecify (D9) is declared with Maven scope `provided` and as `requires static org.jspecify` in both
-modules. Its annotations document the nullness contract and are not needed at runtime, so `core`
-still has zero runtime dependencies (RNF04). A test (`ModuleDescriptorTest`) reads the compiled
+JSpecify (D9) is declared with Maven scope `provided` and as `requires static transitive
+org.jspecify` in both modules. Its annotations document the nullness contract and are not needed at
+runtime, so `core` still has zero runtime dependencies (RNF04). `transitive` makes the annotations
+readable to modular consumers that compile against the exported API, which is what the javac
+`exports` lint asks for; `static` keeps them optional at runtime (maintainer decision, Phase 3 gate,
+2026-11-05; it replaced plain `requires static`). A test (`ModuleDescriptorTest`) reads the compiled
 descriptor and checks that only `java.base` is required non-statically and that only the four API
 packages are exported.
 

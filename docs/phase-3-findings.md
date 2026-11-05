@@ -79,7 +79,7 @@ release on that date.
 
 | Finding | Where | Handling | Why |
 | --- | --- | --- | --- |
-| `[exports]` lint: "class Nullable in module org.jspecify is not indirectly exported using 'requires transitive'" | every `@Nullable` in the exported API (18 places) | Lint category `exports` disabled (`-Xlint:all,-exports`) | `module-info` declares `requires static org.jspecify` (ADR-001). Clearing the warning means changing `module-info` to `requires static transitive org.jspecify`, a change to the reviewed skeleton, so it was not made. **Open question for the maintainer** (section 8) |
+| `[exports]` lint: "class Nullable in module org.jspecify is not indirectly exported using 'requires transitive'" | every `@Nullable` in the exported API (18 places) | **Resolved at the gate:** `requires static transitive org.jspecify` in both modules, and the `exports` lint category is enabled again (`-Xlint:all`) | Approved by the maintainer (section 8). Re-enabling the lint also flagged the `logback` module's exported API, which extends Logback types; that module now declares `requires transitive` on `ch.qos.logback.classic` and `ch.qos.logback.core` (ADR-007) |
 | `DoNotCallSuggester` | every stub method | Check disabled (`-Xep:DoNotCallSuggester:OFF`), re-enable in Phase 4 | The check flags methods whose body only throws, which is every stub |
 | `UnusedVariable` | `InvalidValueException.reason` | `@SuppressWarnings("UnusedVariable")` on the field, with a comment | The stub `reason()` throws, so the field is never read. Remove in Phase 4 |
 | `EscapedEntity` | `Cnpj.toString()` Javadoc | **Fixed**: `{@code …&#47;…}` replaced by `<code>…&#47;…</code>` | A real Javadoc bug: the entity would have been rendered literally |
@@ -167,16 +167,16 @@ phase:
      coverage of these locations is not documented clearly. If it skips them, they are updated by
      hand. CONTRIBUTING.md does not claim otherwise.
 
-## 8. Open questions for the maintainer
+## 8. Maintainer decisions (gate review, 2026-11-05)
 
-1. **`requires static` vs `requires static transitive org.jspecify`** (section 3). The JDK's
-   `exports` lint warns that modular consumers of the exported API cannot see the JSpecify
-   annotations through `core` unless they require JSpecify themselves. `requires static transitive`
-   would fix that, still with no runtime dependency (`ModuleDescriptorTest` and the CI descriptor
-   check only reject non-static requires; the CI expected list would gain `transitive`). It changes
-   `module-info.java` and the text of ADR-001, so it was **not** done in Phase 3. Today the lint
-   category is disabled instead.
-2. **ADR-009 (formatter)** is new in this phase and needs approval at this gate.
+| # | Question | Decision | Recorded in |
+| --- | --- | --- | --- |
+| 1 | `requires static` vs `requires static transitive org.jspecify` (section 3) | **`requires static transitive`** in both modules; the `exports` lint is enabled again. Re-enabling it also required `requires transitive` on `ch.qos.logback.classic` and `ch.qos.logback.core` in the `logback` module, whose exported API extends Logback types | ADR-001, ADR-007, `module-info.java`, CI descriptor check |
+| 2 | ADR-009 (formatter) | **Approved**: palantir-java-format | ADR-009 |
+| 3 | Dependency review failed on license expressions of build-only Apache Maven plugins (`maven-help-plugin`, `maven-javadoc-plugin`, `maven-site-plugin`) | **False positive**: the plugins are Apache-2.0; the extra identifiers (`LicenseRef-scancode-*`, `SAX-PD`, `xpp`) come from scancode-detected third-party files bundled inside them, and nothing from them ships in our JARs. Exempted by name with `allow-dependencies-licenses`; every other dependency is still checked. A plugin flagged the same way in the future must be added explicitly | `.github/workflows/ci.yml` |
+
+The first Dependency review run also failed because the repository's Dependency graph was off; the
+maintainer enabled it in the repository settings.
 
 ## Sources
 

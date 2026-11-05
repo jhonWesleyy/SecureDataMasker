@@ -164,13 +164,8 @@
             <failOnWarning>true</failOnWarning>
             <showWarnings>true</showWarnings>
             <compilerArgs>
-              <!--
-                All lint categories except "exports": it flags every JSpecify @Nullable in the
-                exported API because module-info declares "requires static org.jspecify" (ADR-001)
-                rather than "requires static transitive". Changing module-info is outside Phase 3;
-                the open question is recorded in docs/phase-3-findings.md.
-              -->
-              <arg>-Xlint:all,-exports</arg>
+              <!-- All lint categories, "exports" included (module-info uses requires static transitive). -->
+              <arg>-Xlint:all</arg>
               <arg>-XDcompilePolicy=simple</arg>
               <arg>--should-stop=ifError=FLOW</arg>
               <!--

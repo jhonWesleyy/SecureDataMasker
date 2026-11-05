@@ -8,9 +8,9 @@
  */
 module io.github.jhonwesleyy.securedatamasker.logback {
     requires io.github.jhonwesleyy.securedatamasker.core;
-    requires ch.qos.logback.classic;
-    requires ch.qos.logback.core;
-    requires static org.jspecify;
+    requires transitive ch.qos.logback.classic;
+    requires transitive ch.qos.logback.core;
+    requires static transitive org.jspecify;
 
     exports io.github.jhonwesleyy.securedatamasker.logback;
 }

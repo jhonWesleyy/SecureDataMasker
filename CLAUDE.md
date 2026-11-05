@@ -12,14 +12,14 @@ Posicionamento: a biblioteca **reduz** a exposição acidental, não a elimina. 
 
 - **Fase 1 (Discovery): concluída.** A especificação está em `docs/spec.md`.
 - **Fase 2 (Architecture): concluída** (PR #1, merged; gate aprovado em 05/11/2026). ADRs 001 a 008, esqueleto da API pública (todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`), `docs/masking-policy.md`, PoC com Logback puro e `docs/phase-2-findings.md`.
-- **Fase 3 (Foundation): entregue no branch `phase-3-foundation`, por pull request; aguarda o gate** (CI verde em toda a matriz). Conteúdo:
+- **Fase 3 (Foundation): entregue no branch `phase-3-foundation` (PR #2); gate revisado em 05/11/2026 (D19 a D21), falta o merge pelo mantenedor.** Conteúdo:
   - Maven Wrapper (Maven 3.9.16, com `distributionSha256Sum` e `wrapperSha256Sum`), build reproduzível (`project.build.outputTimestamp`), plugins com versão fixa;
   - toolchains: compila uma vez no JDK 25 com `--release 21`; testes no JDK 21 ou 25 via `-Dtest.jdk` (Surefire `jdkToolchain`);
   - Spotless + palantir-java-format (ADR-009), Error Prone + NullAway em modo JSpecify, SpotBugs + Find Security Bugs (`config/spotbugs-exclude.xml`), JaCoCo (só relatórios; o gate da seção 13.2 é ligado na Fase 4), Javadoc com `doclint=all` e `failOnWarnings`;
   - Jazzer 0.30.0 funciona no JUnit 6.1.3 e foi mantido (D16): um `@FuzzTest` de exemplo em modo de regressão;
   - `.github/`: `ci.yml`, `codeql.yml`, `scorecard.yml`, `dependabot.yml` e `logback-matrix/` (versões "latest" da matriz);
   - `LICENSE`, `NOTICE`, `CHANGELOG.md`, `CONTRIBUTING.md`, `.editorconfig`;
-  - `docs/phase-3-findings.md`, com as verificações, as exceções às ferramentas e as **perguntas abertas** (seção 8: `requires static transitive org.jspecify`; aprovação do ADR-009).
+  - `docs/phase-3-findings.md`, com as verificações, as exceções às ferramentas e as decisões do gate (seção 8).
 - **Fase 4 (Core Implementation): não iniciada.** Ao começar: remover as exclusões e supressões marcadas "Phase 3 only"/"Phase 4", religar o `DoNotCallSuggester` e o gate do JaCoCo (`jacoco.check.skip=false`), e adicionar o PIT.
 
 Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fase seguinte sem que o gate da anterior tenha sido aprovado pelo mantenedor.
@@ -46,8 +46,11 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | D16 | Jazzer só depois de um `@FuzzTest` real rodar no JUnit 6 (Fase 3 ou 4); sem voltar o JUnit para a 5.x | **Aprovada** |
 | D17 | RF15 (detectores customizados) adiado; manter ou cortar é decidido antes da 1.0 (ADR-006) | **Aprovada** |
 | D18 | `TextMasker.detect(...)` fora da API pública; `Match` é interno (ADR-002) | **Aprovada** |
+| D19 | `requires static transitive org.jspecify` nos dois módulos e lint `exports` ligado; no `logback`, `requires transitive` para `ch.qos.logback.classic` e `ch.qos.logback.core` (ADR-001, ADR-007) | **Aprovada** |
+| D20 | Formatador palantir-java-format (ADR-009) | **Aprovada** |
+| D21 | Dependency review: isentar por nome só os plugins Maven de build da Apache sinalizados por falso positivo de licença; todo o resto continua verificado | **Aprovada** |
 
-As decisões D1 a D13 foram aprovadas em 04/11/2026 e D14 a D18 em 05/11/2026, na revisão do gate da Fase 2. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+As decisões D1 a D13 foram aprovadas em 04/11/2026, D14 a D18 em 05/11/2026 (gate da Fase 2) e D19 a D21 em 05/11/2026 (gate da Fase 3). Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
 
 Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` (registro da Fase 1) continuam em português. Todo documento criado a partir da Fase 2 segue a D13.
 

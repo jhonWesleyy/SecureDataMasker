@@ -8,7 +8,7 @@
  * lookup tables and is deliberately not exported (RNF09).
  */
 module io.github.jhonwesleyy.securedatamasker.core {
-    requires static org.jspecify;
+    requires static transitive org.jspecify;
 
     exports io.github.jhonwesleyy.securedatamasker.core;
     exports io.github.jhonwesleyy.securedatamasker.core.validation;

@@ -1,6 +1,6 @@
 # ADR-009: Spotless with palantir-java-format
 
-- **Status:** Proposed (Phase 3; approved with the Phase 3 gate)
+- **Status:** Accepted (approved by the maintainer at the Phase 3 gate, 2026-11-05)
 - **Date:** 2026-11-05
 - **Phase:** 3 (Foundation)
 

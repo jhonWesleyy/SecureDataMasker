@@ -115,15 +115,15 @@ jobs:
               'exports io.github.jhonwesleyy.securedatamasker.core.masking' \
               'exports io.github.jhonwesleyy.securedatamasker.core.validation' \
               'requires java.base mandated' \
-              'requires org.jspecify static' | sort) \
+              'requires org.jspecify static transitive' | sort) \
             <(describe securedatamasker-core/target/securedatamasker-core-*-SNAPSHOT.jar)
           diff -u <(printf '%s\n' \
               'exports io.github.jhonwesleyy.securedatamasker.logback' \
-              'requires ch.qos.logback.classic' \
-              'requires ch.qos.logback.core' \
+              'requires ch.qos.logback.classic transitive' \
+              'requires ch.qos.logback.core transitive' \
               'requires io.github.jhonwesleyy.securedatamasker.core' \
               'requires java.base mandated' \
-              'requires org.jspecify static' | sort) \
+              'requires org.jspecify static transitive' | sort) \
             <(describe securedatamasker-logback/target/securedatamasker-logback-*-SNAPSHOT.jar)
 
       - name: Check that core has no runtime dependencies (RNF04)
@@ -170,3 +170,12 @@ jobs:
           allow-licenses: >-
             Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC,
             EPL-1.0, EPL-2.0, LGPL-2.1-only, LGPL-2.1-or-later
+          # Build-only Apache Maven plugins (Apache-2.0). Their compound license expressions come
+          # from scancode-detected third-party files bundled inside them (public-domain fragments,
+          # JDOM, SAX); nothing from them ships in our JARs. Exempted by name so that every other
+          # dependency is still checked. A new plugin flagged the same way must be added here
+          # explicitly (docs/phase-3-findings.md, section 8).
+          allow-dependencies-licenses: >-
+            pkg:maven/org.apache.maven.plugins/maven-help-plugin,
+            pkg:maven/org.apache.maven.plugins/maven-javadoc-plugin,
+            pkg:maven/org.apache.maven.plugins/maven-site-plugin
