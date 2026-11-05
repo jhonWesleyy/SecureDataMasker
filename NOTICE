@@ -1,0 +1,8 @@
+SecureDataMasker
+Copyright 2026 The SecureDataMasker authors
+
+This product is licensed under the Apache License, Version 2.0 (see the LICENSE file).
+
+The published artifacts bundle no third-party code. securedatamasker-logback requires Logback
+(ch.qos.logback:logback-classic), which the application supplies and which is licensed separately
+under EPL-1.0 / LGPL-2.1.

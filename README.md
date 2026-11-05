@@ -4,7 +4,7 @@
 
 A Java library to validate, normalize and mask Brazilian sensitive data (CPF, CNPJ, e-mail, phone number and Pix key), with Logback integration to reduce the exposure of that data in logs.
 
-> **Status: under design (Phase 2).** The public API exists only as a skeleton: every method throws `UnsupportedOperationException`. There is no working code and no published release. Nothing described here can be used at this point.
+> **Status: foundation (Phase 3).** Build, quality gates and CI are in place. The public API exists only as a skeleton: every method throws `UnsupportedOperationException`. There is no working code and no published release. Nothing described here can be used at this point.
 
 ## Documentation
 
@@ -12,7 +12,13 @@ A Java library to validate, normalize and mask Brazilian sensitive data (CPF, CN
 - [Architecture decision records](docs/adr/) (Phase 2).
 - [Masking policy](docs/masking-policy.md) — the planned output per type and preset (not implemented yet).
 - [Phase 2 findings](docs/phase-2-findings.md) — Logback proof of concept and tooling research.
+- [Phase 3 findings](docs/phase-3-findings.md) — build, quality tooling and CI verification, Jazzer spike.
+
+## Contributing
+
+- [Contributing guide](CONTRIBUTING.md) — build commands, toolchains, quality gates and the fictitious-data rule.
+- [Changelog](CHANGELOG.md).
 
 ## License
 
-Apache-2.0 (the `LICENSE` file will be added in Phase 3).
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
