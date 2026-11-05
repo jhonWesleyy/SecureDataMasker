@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Phase 2 (Architecture) parent POM.
+  SecureDataMasker parent POM.
 
-  Deliberately minimal: just enough to compile the public API skeleton and run tests.
-  Quality plugins, CI, signing and publishing are Phase 3 and later (docs/spec.md, section 15).
+  Phase 3 (Foundation): build, toolchains and quality gates. Signing, SBOM, provenance and
+  publishing are Phase 8; PIT is Phase 4; japicmp starts at 1.0 (docs/spec.md, sections 10 and 15).
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -34,20 +34,45 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- D1 / ADR-008: Java 21 baseline, built with JDK 25. -->
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!--
+      Reproducible builds: fixed timestamp for every archive entry. Updated at release time
+      (Phase 8); it does not need to change for snapshots.
+    -->
+    <project.build.outputTimestamp>2026-11-05T00:00:00Z</project.build.outputTimestamp>
+
+    <!-- D1 / ADR-008: Java 21 baseline, compiled by the JDK 25 toolchain. -->
     <maven.compiler.release>21</maven.compiler.release>
+    <!-- JDK that compiles and runs Javadoc: always 25 (D1). Matched against ~/.m2/toolchains.xml. -->
+    <build.jdk.range>[25,26)</build.jdk.range>
+    <!--
+      JDK that runs the tests (Surefire jdkToolchain): 21 or 25. CI runs both: -Dtest.jdk=21.
+      The range accepts toolchains declared as "21" as well as "21.0.9+10".
+    -->
+    <test.jdk>25</test.jdk>
 
     <!--
       ADR-007: the consumer picks the Logback version (provided scope). The build compiles against
       the minimum supported version by default; override with -Dlogback.version=... to test others.
+      Dependabot is configured to NEVER bump this property (.github/dependabot.yml); the "latest"
+      versions of the CI matrix live in .github/logback-matrix/ (CONTRIBUTING.md).
     -->
     <logback.version>1.5.19</logback.version>
 
     <jspecify.version>1.0.1</jspecify.version>
     <junit.version>6.1.3</junit.version>
 
+    <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
+    <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
     <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
+    <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
+    <maven-install-plugin.version>3.2.0</maven-install-plugin.version>
+    <maven-deploy-plugin.version>3.2.0</maven-deploy-plugin.version>
+    <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
+    <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
+    <maven-help-plugin.version>3.5.2</maven-help-plugin.version>
+    <maven-toolchains-plugin.version>3.3.0</maven-toolchains-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -80,17 +105,103 @@
   <build>
     <pluginManagement>
       <plugins>
+        <!-- Every plugin is pinned, including the default lifecycle ones (reproducible builds). -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>${maven-clean-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>${maven-resources-plugin.version}</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <!--
+              The toolchain selected below (JDK 25) compiles in a forked javac; the release flag
+              keeps the bytecode and the API surface at Java 21 (ADR-008).
+            -->
+            <fork>true</fork>
+            <release>${maven.compiler.release}</release>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
+          <configuration>
+            <!-- D1: tests run on the JDK chosen with -Dtest.jdk (21 or 25), never on whatever runs Maven. -->
+            <jdkToolchain>
+              <version>[${test.jdk},${test.jdk}.99999)</version>
+            </jdkToolchain>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>${maven-install-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>${maven-deploy-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>${maven-site-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-help-plugin</artifactId>
+          <version>${maven-help-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-toolchains-plugin</artifactId>
+          <version>${maven-toolchains-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <!--
+          D1: compile (and later Javadoc) always with JDK 25, whatever JDK runs Maven. Requires a
+          JDK 25 entry in ~/.m2/toolchains.xml (CONTRIBUTING.md).
+        -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-toolchains-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>select-build-jdk</id>
+            <goals>
+              <goal>toolchain</goal>
+            </goals>
+            <configuration>
+              <toolchains>
+                <jdk>
+                  <version>${build.jdk.range}</version>
+                </jdk>
+              </toolchains>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

@@ -16,3 +16,6 @@ pom.xml.releaseBackup
 # OS
 .DS_Store
 Thumbs.db
+
+# Maven Wrapper: downloaded and checksum-verified by ./mvnw, never committed
+.mvn/wrapper/maven-wrapper.jar
