@@ -12,7 +12,7 @@ Posicionamento: a biblioteca **reduz** a exposição acidental, não a elimina. 
 
 - **Fase 1 (Discovery): concluída.** A especificação está em `docs/spec.md`.
 - **Fase 2 (Architecture): concluída** (PR #1, merged; gate aprovado em 05/11/2026). ADRs 001 a 008, esqueleto da API pública (todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`), `docs/masking-policy.md`, PoC com Logback puro e `docs/phase-2-findings.md`.
-- **Fase 3 (Foundation): entregue no branch `phase-3-foundation` (PR #2); gate revisado em 05/11/2026 (D19 a D21), falta o merge pelo mantenedor.** Conteúdo:
+- **Fase 3 (Foundation): concluída** (PR #2, merged; gate aprovado em 05/11/2026, D19 a D21). Conteúdo:
   - Maven Wrapper (Maven 3.9.16, com `distributionSha256Sum` e `wrapperSha256Sum`), build reproduzível (`project.build.outputTimestamp`), plugins com versão fixa;
   - toolchains: compila uma vez no JDK 25 com `--release 21`; testes no JDK 21 ou 25 via `-Dtest.jdk` (Surefire `jdkToolchain`);
   - Spotless + palantir-java-format (ADR-009), Error Prone + NullAway em modo JSpecify, SpotBugs + Find Security Bugs (`config/spotbugs-exclude.xml`), JaCoCo (só relatórios; o gate da seção 13.2 é ligado na Fase 4), Javadoc com `doclint=all` e `failOnWarnings`;
@@ -49,8 +49,10 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | D19 | `requires static transitive org.jspecify` nos dois módulos e lint `exports` ligado; no `logback`, `requires transitive` para `ch.qos.logback.classic` e `ch.qos.logback.core` (ADR-001, ADR-007) | **Aprovada** |
 | D20 | Formatador palantir-java-format (ADR-009) | **Aprovada** |
 | D21 | Dependency review: isentar por nome só os plugins Maven de build da Apache sinalizados por falso positivo de licença; todo o resto continua verificado | **Aprovada** |
+| D22 | D13 mantida (artefatos em inglês); a conversa com o mantenedor é em português do Brasil | **Aprovada** |
+| D23 | `main` protegido: merge só por PR com `CI result`, `Dependency review` e `Analyze (Java)` verdes; sem push direto nem force push | **Aprovada** |
 
-As decisões D1 a D13 foram aprovadas em 04/11/2026, D14 a D18 em 05/11/2026 (gate da Fase 2) e D19 a D21 em 05/11/2026 (gate da Fase 3). Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+As decisões D1 a D13 foram aprovadas em 04/11/2026, D14 a D18 em 05/11/2026 (gate da Fase 2) e D19 a D23 em 05/11/2026 (gate da Fase 3 e preparação da Fase 4). Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
 
 Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` (registro da Fase 1) continuam em português. Todo documento criado a partir da Fase 2 segue a D13.
 
@@ -74,6 +76,8 @@ Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` 
 
 ## Convenções de trabalho
 
+- **Comunique-se com o mantenedor em português do Brasil**: planos, perguntas, resumos e explicações, qualquer que seja o idioma do prompt. Os artefatos versionados (código, comentários, Javadoc, `docs/`, mensagens de commit e descrição de PR) seguem a D13 e ficam em inglês; termos do domínio brasileiro (CPF, CNPJ, Pix, DDD, DICT, EVP) não são traduzidos.
+- Todo merge no `main` passa por pull request com o check **`CI result`** verde (proteção do branch; D23). O check `CI result` agrega toda a matriz, porque os nomes dos jobs da matriz mudam quando o Dependabot atualiza as versões do Logback.
 - Cada fase em um branch próprio, entregue por pull request.
 - Mensagens de commit no imperativo, em português ou inglês, de forma consistente dentro do PR.
 - Commits só de formatação (`spotless:apply`) ficam separados dos demais.

@@ -148,6 +148,24 @@ jobs:
             securedatamasker-*/target/reports/apidocs/
             securedatamasker-core/target/runtime-dependencies.txt
 
+  # Stable-named check for branch protection. The matrix job names embed Logback versions that
+  # Dependabot bumps, so they cannot be required directly; this job fails unless every matrix
+  # leg (and the matrix resolution) succeeded.
+  ci-result:
+    name: CI result
+    if: always()
+    needs: [logback-versions, build]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require every matrix job to succeed
+        env:
+          RESOLVE: ${{ needs.logback-versions.result }}
+          BUILD: ${{ needs.build.result }}
+        run: |
+          echo "logback-versions=$RESOLVE build=$BUILD"
+          [ "$RESOLVE" = success ] && [ "$BUILD" = success ]
+
   dependency-review:
     name: Dependency review
     if: github.event_name == 'pull_request'
