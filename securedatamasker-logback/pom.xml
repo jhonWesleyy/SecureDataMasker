@@ -14,6 +14,12 @@
   <name>SecureDataMasker Logback</name>
   <description>Logback integration for SecureDataMasker: the %mask converter and MaskingPatternLayoutEncoder.</description>
 
+  <properties>
+    <!-- Spec 13.2: the logback module requires line coverage >= 85% and sets no branch minimum. -->
+    <jacoco.minimum.line>0.85</jacoco.minimum.line>
+    <jacoco.minimum.branch>0.00</jacoco.minimum.branch>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.github.jhonwesleyy</groupId>

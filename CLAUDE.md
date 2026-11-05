@@ -11,14 +11,16 @@ Posicionamento: a biblioteca **reduz** a exposição acidental, não a elimina. 
 ## Estado atual
 
 - **Fase 1 (Discovery): concluída.** A especificação está em `docs/spec.md`.
-- **Fase 2 (Architecture): entregue no branch `phase-2-architecture` (PR #1), gate revisado em 05/11/2026.** Conteúdo:
-  - ADRs 001 a 008 em `docs/adr/`;
-  - esqueleto da API pública de `securedatamasker-core` e `securedatamasker-logback`: todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`, sem lógica de validação, detecção ou mascaramento;
-  - `docs/masking-policy.md` com a tabela final de máscaras;
-  - PoC com Logback puro em `securedatamasker-logback/src/test/.../poc/`;
-  - `docs/phase-2-findings.md`, com resultados e fontes.
-- **Perguntas da Fase 2 respondidas** na revisão do gate (D14 a D18; seção 5 de `docs/phase-2-findings.md`). Falta só o merge do PR #1 pelo mantenedor.
-- **Fase 3 (Foundation): não iniciada.** Os POMs atuais são mínimos de propósito: sem plugins de qualidade, CI, assinatura ou publicação.
+- **Fase 2 (Architecture): concluída** (PR #1, merged; gate aprovado em 05/11/2026). ADRs 001 a 008, esqueleto da API pública (todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`), `docs/masking-policy.md`, PoC com Logback puro e `docs/phase-2-findings.md`.
+- **Fase 3 (Foundation): entregue no branch `phase-3-foundation` (PR #2); gate revisado em 05/11/2026 (D19 a D21), falta o merge pelo mantenedor.** Conteúdo:
+  - Maven Wrapper (Maven 3.9.16, com `distributionSha256Sum` e `wrapperSha256Sum`), build reproduzível (`project.build.outputTimestamp`), plugins com versão fixa;
+  - toolchains: compila uma vez no JDK 25 com `--release 21`; testes no JDK 21 ou 25 via `-Dtest.jdk` (Surefire `jdkToolchain`);
+  - Spotless + palantir-java-format (ADR-009), Error Prone + NullAway em modo JSpecify, SpotBugs + Find Security Bugs (`config/spotbugs-exclude.xml`), JaCoCo (só relatórios; o gate da seção 13.2 é ligado na Fase 4), Javadoc com `doclint=all` e `failOnWarnings`;
+  - Jazzer 0.30.0 funciona no JUnit 6.1.3 e foi mantido (D16): um `@FuzzTest` de exemplo em modo de regressão;
+  - `.github/`: `ci.yml`, `codeql.yml`, `scorecard.yml`, `dependabot.yml` e `logback-matrix/` (versões "latest" da matriz);
+  - `LICENSE`, `NOTICE`, `CHANGELOG.md`, `CONTRIBUTING.md`, `.editorconfig`;
+  - `docs/phase-3-findings.md`, com as verificações, as exceções às ferramentas e as decisões do gate (seção 8).
+- **Fase 4 (Core Implementation): não iniciada.** Ao começar: remover as exclusões e supressões marcadas "Phase 3 only"/"Phase 4", religar o `DoNotCallSuggester` e o gate do JaCoCo (`jacoco.check.skip=false`), e adicionar o PIT.
 
 Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fase seguinte sem que o gate da anterior tenha sido aprovado pelo mantenedor.
 
@@ -44,8 +46,11 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | D16 | Jazzer só depois de um `@FuzzTest` real rodar no JUnit 6 (Fase 3 ou 4); sem voltar o JUnit para a 5.x | **Aprovada** |
 | D17 | RF15 (detectores customizados) adiado; manter ou cortar é decidido antes da 1.0 (ADR-006) | **Aprovada** |
 | D18 | `TextMasker.detect(...)` fora da API pública; `Match` é interno (ADR-002) | **Aprovada** |
+| D19 | `requires static transitive org.jspecify` nos dois módulos e lint `exports` ligado; no `logback`, `requires transitive` para `ch.qos.logback.classic` e `ch.qos.logback.core` (ADR-001, ADR-007) | **Aprovada** |
+| D20 | Formatador palantir-java-format (ADR-009) | **Aprovada** |
+| D21 | Dependency review: isentar por nome só os plugins Maven de build da Apache sinalizados por falso positivo de licença; todo o resto continua verificado | **Aprovada** |
 
-As decisões D1 a D13 foram aprovadas em 04/11/2026 e D14 a D18 em 05/11/2026, na revisão do gate da Fase 2. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+As decisões D1 a D13 foram aprovadas em 04/11/2026, D14 a D18 em 05/11/2026 (gate da Fase 2) e D19 a D21 em 05/11/2026 (gate da Fase 3). Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
 
 Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` (registro da Fase 1) continuam em português. Todo documento criado a partir da Fase 2 segue a D13.
 
@@ -71,37 +76,56 @@ Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` 
 
 - Cada fase em um branch próprio, entregue por pull request.
 - Mensagens de commit no imperativo, em português ou inglês, de forma consistente dentro do PR.
-- Comandos de qualidade (Spotless, Error Prone, SpotBugs, JaCoCo, PIT) serão definidos na Fase 3. Quando existirem, documente-os aqui.
+- Commits só de formatação (`spotless:apply`) ficam separados dos demais.
 
-### Comandos de build e teste (Fase 2)
+### Comandos de build e teste (Fase 3)
 
-Build com o JDK 25 (`--release 21` vem do POM). Por padrão, compila contra o Logback mínimo, 1.5.19:
+Use sempre o wrapper (`./mvnw`). O build compila com o JDK 25 do `~/.m2/toolchains.xml` (`--release 21`) e roda todos os gates (Spotless, Error Prone/NullAway, testes, SpotBugs, Javadoc, relatório do JaCoCo). Por padrão, testa no JDK 25 e contra o Logback mínimo, 1.5.19:
 
 ```bash
-mvn -v                     # deve mostrar "Java version: 25..."
-mvn -B clean verify
+./mvnw -B clean verify
 ```
 
-PoC e esqueleto contra outra versão do Logback:
+Testes no JDK 21 (a compilação continua no JDK 25):
 
 ```bash
-mvn -B clean verify -Dlogback.version=1.5.38
-mvn -B clean verify -Dlogback.version=1.6.6
+./mvnw -B clean verify -Dtest.jdk=21
 ```
 
-Conferência com o JDK 21. O `MAVEN_OPTS` do ambiente traz `--sun-misc-unsafe-memory-access=allow`, que o JDK 21 não aceita, por isso é zerado:
+Contra outra versão do Logback (as "latest" da matriz estão em `.github/logback-matrix/*/pom.xml`):
 
 ```bash
-JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 MAVEN_SKIP_RC=true MAVEN_OPTS= mvn -B clean verify
+./mvnw -B clean verify -Dlogback.version=1.5.38
+./mvnw -B clean verify -Dlogback.version=1.6.6
 ```
 
-Ausência de dependências em runtime no `core`:
+Formatação (rode antes de commitar):
 
 ```bash
-mvn -B dependency:tree -pl securedatamasker-core
+./mvnw spotless:apply
+```
+
+Ausência de dependências em runtime no `core` (deve listar só o próprio `core`):
+
+```bash
+./mvnw -B dependency:tree -pl securedatamasker-core -Dscope=runtime
+```
+
+Gate de cobertura (desligado até a Fase 4; hoje falha contra os stubs, como esperado):
+
+```bash
+./mvnw -B verify -Djacoco.check.skip=false
+```
+
+Fuzzing local com o Jazzer (o build normal só roda o modo de regressão):
+
+```bash
+JAZZER_FUZZ=1 JAZZER_MAX_DURATION=60s ./mvnw test -pl securedatamasker-core -Dtest=LongestDigitRunFuzzTest
 ```
 
 Observações do ambiente:
 
-- O `mvn` usa o `JAVA_HOME`, não o `update-alternatives`. O JDK 25 é selecionado por `/etc/mavenrc` (`export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64`).
-- O `~/.m2/toolchains.xml` tem os JDKs 21 e 25, mas o `maven-toolchains-plugin` não está configurado nos POMs: isso é da Fase 3.
+- O `/etc/mavenrc` seleciona o JDK 25 para rodar o Maven. Com o Maven no JDK 25, o `MAVEN_OPTS` do ambiente (`--sun-misc-unsafe-memory-access=allow`) não atrapalha: os JVMs de teste (JDK 21 ou 25) não o herdam. Só se o próprio Maven rodar no JDK 21 é preciso zerá-lo: `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 MAVEN_SKIP_RC=true MAVEN_OPTS= ./mvnw -B clean verify -Dtest.jdk=21`.
+- O `~/.m2/toolchains.xml` precisa declarar os JDKs 21 e 25; no CI, o `actions/setup-java` o gera.
+- O Maven Central pode responder HTTP 429 (limite de requisições) neste ambiente; nesse caso, espere e tente de novo. Não desligue a verificação de checksum do wrapper.
+- O `maven-javadoc-plugin` precisa de `quiet=false`: com `quiet=true`, o `failOnWarnings` deixa de funcionar (`docs/phase-3-findings.md`, seção 5).

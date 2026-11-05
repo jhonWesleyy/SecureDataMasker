@@ -13,6 +13,10 @@ version. Logback before 1.5.19 is affected by CVE-2025-11226 (spec section 8.2).
 ## Decision
 
 1. `securedatamasker-logback` declares `ch.qos.logback:logback-classic` with scope **`provided`**.
+   In `module-info.java` it declares `requires transitive` on `ch.qos.logback.classic` and
+   `ch.qos.logback.core`, because its exported API extends Logback types (`PatternLayoutEncoder`,
+   `CompositeConverter<ILoggingEvent>`). `transitive` only states module readability for
+   consumers, who already have Logback; it does not bundle anything (Phase 3 gate, 2026-11-05).
    The application supplies Logback, and the library never bundles or shades it.
 2. **Minimum supported version: 1.5.19.** The evidence is in `docs/phase-2-findings.md`, section 1:
    - The Phase 2 PoC passes unchanged on 1.5.18, 1.5.19, 1.5.38 and 1.6.6. Logback's behavior is
