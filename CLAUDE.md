@@ -11,7 +11,14 @@ Posicionamento: a biblioteca **reduz** a exposição acidental, não a elimina. 
 ## Estado atual
 
 - **Fase 1 (Discovery): concluída.** A especificação está em `docs/spec.md`.
-- **Fase 2 (Architecture): próxima.** Nenhum código implementado ainda.
+- **Fase 2 (Architecture): entregue no branch `phase-2-architecture`, aguardando o gate** (revisão do esqueleto da API pelo mantenedor). Conteúdo:
+  - ADRs 001 a 008 em `docs/adr/`;
+  - esqueleto da API pública de `securedatamasker-core` e `securedatamasker-logback`: todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`, sem lógica de validação, detecção ou mascaramento;
+  - `docs/masking-policy.md` com a tabela final de máscaras;
+  - PoC com Logback puro em `securedatamasker-logback/src/test/.../poc/`;
+  - `docs/phase-2-findings.md`, com resultados e fontes.
+- **Perguntas abertas para o mantenedor** (seção 5 de `docs/phase-2-findings.md`): suporte ao Logback 1.6.x (a RNF08 continua dizendo 1.5.x); substituição do jqwik; compatibilidade do Jazzer com o JUnit 6; futuro do RF15 (adiado na ADR-006).
+- **Fase 3 (Foundation): não iniciada.** Os POMs atuais são mínimos de propósito: sem plugins de qualidade, CI, assinatura ou publicação.
 
 Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fase seguinte sem que o gate da anterior tenha sido aprovado pelo mantenedor.
 
@@ -60,4 +67,37 @@ Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` 
 
 - Cada fase em um branch próprio, entregue por pull request.
 - Mensagens de commit no imperativo, em português ou inglês, de forma consistente dentro do PR.
-- Comandos de build e de qualidade serão definidos na Fase 3. Quando existirem, documente-os aqui.
+- Comandos de qualidade (Spotless, Error Prone, SpotBugs, JaCoCo, PIT) serão definidos na Fase 3. Quando existirem, documente-os aqui.
+
+### Comandos de build e teste (Fase 2)
+
+Build com o JDK 25 (`--release 21` vem do POM). Por padrão, compila contra o Logback mínimo, 1.5.19:
+
+```bash
+mvn -v                     # deve mostrar "Java version: 25..."
+mvn -B clean verify
+```
+
+PoC e esqueleto contra outra versão do Logback:
+
+```bash
+mvn -B clean verify -Dlogback.version=1.5.38
+mvn -B clean verify -Dlogback.version=1.6.6
+```
+
+Conferência com o JDK 21. O `MAVEN_OPTS` do ambiente traz `--sun-misc-unsafe-memory-access=allow`, que o JDK 21 não aceita, por isso é zerado:
+
+```bash
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 MAVEN_SKIP_RC=true MAVEN_OPTS= mvn -B clean verify
+```
+
+Ausência de dependências em runtime no `core`:
+
+```bash
+mvn -B dependency:tree -pl securedatamasker-core
+```
+
+Observações do ambiente:
+
+- O `mvn` usa o `JAVA_HOME`, não o `update-alternatives`. O JDK 25 é selecionado por `/etc/mavenrc` (`export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64`).
+- O `~/.m2/toolchains.xml` tem os JDKs 21 e 25, mas o `maven-toolchains-plugin` não está configurado nos POMs: isso é da Fase 3.
