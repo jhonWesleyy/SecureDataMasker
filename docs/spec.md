@@ -367,17 +367,17 @@ Java 21 como versão mínima (desenvolvimento no JDK 25), Maven como build e o m
 | Logback | **1.5.x**, mínimo a definir ≥ 1.5.19 | \[Fato\] A série 1.5 é a ativa e exige Java 11+; a 1.3.x (Java 8) fica fora. A 1.5.19 corrigiu a CVE-2025-11226. A API de `CompositeConverter` / `ClassicConverter` é estável há muitas versões. |
 | SLF4J | 2.0.x (via Logback) | Necessário para os key-value pairs da API fluente |
 | Módulos | `module-info.java` real | Encapsula o pacote `internal`; facilita uso em `jlink` |
-| Anotações de nulidade | JSpecify \[Proposta, D9\] | Contrato de nulidade na API pública. É a única dependência candidata no `core`: só anotações, escopo de compilação, sem código em runtime. |
+| Anotações de nulidade | JSpecify \[Aprovado, D9\] | Contrato de nulidade na API pública. É a única dependência candidata no `core`: só anotações, escopo de compilação, sem código em runtime. |
 
 ### 10.2 Build e distribuição
 
 | Item | Escolha | Justificativa |
 | --- | --- | --- |
-| Build | **Maven** \[Proposta, D2\] | Publicação no Maven Central Portal com o plugin oficial da Sonatype; builds reproduzíveis com `project.build.outputTimestamp` bem documentados; menor superfície que o Gradle (sem scripts executáveis no build). Gradle funcionaria, mas depende de plugins de terceiros para o Portal. |
+| Build | **Maven** \[Aprovado, D2\] | Publicação no Maven Central Portal com o plugin oficial da Sonatype; builds reproduzíveis com `project.build.outputTimestamp` bem documentados; menor superfície que o Gradle (sem scripts executáveis no build). Gradle funcionaria, mas depende de plugins de terceiros para o Portal. |
 | Publicação | Central Portal + `central-publishing-maven-plugin` | \[Fato\] O OSSRH legado foi descontinuado em 2025; o caminho atual é o Central Portal |
 | Assinatura | PGP (exigido pelo Central) + proveniência via `actions/attest-build-provenance` | Integridade e origem verificáveis |
 | SBOM | `cyclonedx-maven-plugin` | Padrão amplamente aceito; publicado junto do artefato |
-| Licença | **Apache-2.0** \[Proposta, D7\] | Concessão explícita de patente; padrão do ecossistema Java; amigável a empresas |
+| Licença | **Apache-2.0** \[Aprovado, D7\] | Concessão explícita de patente; padrão do ecossistema Java; amigável a empresas |
 
 ### 10.3 Qualidade de código: seleção sem redundância
 
@@ -543,7 +543,7 @@ Oito fases em sequência, cada uma fechada por um *gate* verificável. A fase se
 
 ## 17. Decisões que precisam da sua aprovação
 
-Dez decisões bloqueiam a Fase 2. Cada uma traz minha recomendação; responda só onde discordar. As marcadas com \* mudam a API pública e ficam caras de reverter depois.
+Todas as dez decisões foram aprovadas em 04/11/2026, conforme a coluna de recomendação (D1 revista para Java 21). As marcadas com \* mudam a API pública e ficam caras de reverter depois.
 
 | ID | Decisão | Recomendação | Alternativa principal |
 | --- | --- | --- | --- |
