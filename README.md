@@ -10,4 +10,4 @@ Biblioteca Java para validar, normalizar e mascarar dados sensíveis brasileiros
 
 ## Licença
 
-A definir (proposta: Apache-2.0).
+Apache-2.0 (o arquivo `LICENSE` será adicionado na Fase 3).

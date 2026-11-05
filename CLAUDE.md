@@ -21,16 +21,16 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | --- | --- | --- |
 | D1 | Java mínimo **21**; desenvolvimento no **JDK 25** com `--release 21`; CI com 21 e 25 | **Aprovada** |
 | D6 | `groupId` `io.github.jhonwesleyy`; pacote base `io.github.jhonwesleyy.securedatamasker` | **Aprovada** |
-| D2 | Maven | Proposta, pendente |
-| D3 | Dois módulos publicados: `securedatamasker-core` (zero dependências em runtime) e `securedatamasker-logback` | Proposta, pendente |
-| D4 | Detecção: formatos com máscara → `SHAPE`; sequências só de dígitos/alfanuméricas → `VALIDATED`; telefone só com formatação ou `+55` | Proposta, pendente |
-| D5 | Preset de máscara padrão `BALANCED`, com máscara de comprimento fixo | Proposta, pendente |
-| D7 | Licença Apache-2.0 | Proposta, pendente |
-| D8 | `MaskingPatternLayoutEncoder` como integração padrão; `%mask(...)` como opção avançada | Proposta, pendente |
-| D9 | JSpecify + NullAway | Proposta, pendente |
-| D10 | Nome SecureDataMasker, `artifactId` `securedatamasker-*` | Proposta, pendente |
+| D2 | Maven | **Aprovada** |
+| D3 | Dois módulos publicados: `securedatamasker-core` (zero dependências em runtime) e `securedatamasker-logback` | **Aprovada** |
+| D4 | Detecção: formatos com máscara → `SHAPE`; sequências só de dígitos/alfanuméricas → `VALIDATED`; telefone só com formatação ou `+55` | **Aprovada** |
+| D5 | Preset de máscara padrão `BALANCED`, com máscara de comprimento fixo | **Aprovada** |
+| D7 | Licença Apache-2.0 | **Aprovada** |
+| D8 | `MaskingPatternLayoutEncoder` como integração padrão; `%mask(...)` como opção avançada | **Aprovada** |
+| D9 | JSpecify + NullAway | **Aprovada** |
+| D10 | Nome SecureDataMasker, `artifactId` `securedatamasker-*` (único dentro do namespace `io.github.jhonwesleyy`) | **Aprovada** |
 
-Decisões pendentes não devem ser tratadas como definitivas. Se a tarefa depender de uma delas, pergunte ao mantenedor antes de implementar. Ao aprovar ou alterar uma decisão, atualize esta tabela.
+Todas as decisões D1 a D10 foram aprovadas em 04/11/2026. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
 
 ## Regras obrigatórias
 
