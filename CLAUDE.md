@@ -11,7 +11,14 @@ Posicionamento: a biblioteca **reduz** a exposição acidental, não a elimina. 
 ## Estado atual
 
 - **Fase 1 (Discovery): concluída.** A especificação está em `docs/spec.md`.
-- **Fase 2 (Architecture): próxima.** Nenhum código implementado ainda.
+- **Fase 2 (Architecture): entregue no branch `phase-2-architecture` (PR #1), gate revisado em 05/11/2026.** Conteúdo:
+  - ADRs 001 a 008 em `docs/adr/`;
+  - esqueleto da API pública de `securedatamasker-core` e `securedatamasker-logback`: todos os métodos lançam `UnsupportedOperationException("Not implemented yet")`, sem lógica de validação, detecção ou mascaramento;
+  - `docs/masking-policy.md` com a tabela final de máscaras;
+  - PoC com Logback puro em `securedatamasker-logback/src/test/.../poc/`;
+  - `docs/phase-2-findings.md`, com resultados e fontes.
+- **Perguntas da Fase 2 respondidas** na revisão do gate (D14 a D18; seção 5 de `docs/phase-2-findings.md`). Falta só o merge do PR #1 pelo mantenedor.
+- **Fase 3 (Foundation): não iniciada.** Os POMs atuais são mínimos de propósito: sem plugins de qualidade, CI, assinatura ou publicação.
 
 Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fase seguinte sem que o gate da anterior tenha sido aprovado pelo mantenedor.
 
@@ -29,12 +36,16 @@ Trabalhe uma fase por vez (seção 15 de `docs/spec.md`). Não avance para a fas
 | D8 | `MaskingPatternLayoutEncoder` como integração padrão; `%mask(...)` como opção avançada | **Aprovada** |
 | D9 | JSpecify + NullAway | **Aprovada** |
 | D10 | Nome SecureDataMasker, `artifactId` `securedatamasker-*` (único dentro do namespace `io.github.jhonwesleyy`) | **Aprovada** |
-
 | D11 | Objetivo em etapas: projeto de portfólio na série 0.x; biblioteca mantida para terceiros a partir da 1.0, com compatibilidade rigorosa (japicmp) desde então | **Aprovada** |
 | D12 | MVP sem adaptador JSON: só a integração via PatternLayout; RF21/RF22 continuam como funcionalidades futuras | **Aprovada** |
 | D13 | Idioma: código, Javadoc e documentação (`docs/`, CHANGELOG, CONTRIBUTING) em **inglês**. README bilíngue: `README.md` em inglês e `README.pt-BR.md` em português, com link entre eles no topo; no `README.pt-BR.md`, os exemplos de código são **idênticos** aos do inglês e só o texto ao redor é traduzido | **Aprovada** |
+| D14 | Logback suportado: **1.5.19+, incluindo 1.6.x**; matriz do CI com 1.5.19, a última 1.5.x e a última 1.6.x (ADR-007) | **Aprovada** |
+| D15 | jqwik **não** adotado: testes de propriedade com geradores próprios de seed fixa em `@ParameterizedTest` do JUnit | **Aprovada** |
+| D16 | Jazzer só depois de um `@FuzzTest` real rodar no JUnit 6 (Fase 3 ou 4); sem voltar o JUnit para a 5.x | **Aprovada** |
+| D17 | RF15 (detectores customizados) adiado; manter ou cortar é decidido antes da 1.0 (ADR-006) | **Aprovada** |
+| D18 | `TextMasker.detect(...)` fora da API pública; `Match` é interno (ADR-002) | **Aprovada** |
 
-Todas as decisões D1 a D13 foram aprovadas em 04/11/2026. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
+As decisões D1 a D13 foram aprovadas em 04/11/2026 e D14 a D18 em 05/11/2026, na revisão do gate da Fase 2. Qualquer alteração precisa da aprovação do mantenedor e deve ser registrada nesta tabela e num ADR.
 
 Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` (registro da Fase 1) continuam em português. Todo documento criado a partir da Fase 2 segue a D13.
 
@@ -60,4 +71,37 @@ Exceções de idioma: este `CLAUDE.md` (instruções internas) e `docs/spec.md` 
 
 - Cada fase em um branch próprio, entregue por pull request.
 - Mensagens de commit no imperativo, em português ou inglês, de forma consistente dentro do PR.
-- Comandos de build e de qualidade serão definidos na Fase 3. Quando existirem, documente-os aqui.
+- Comandos de qualidade (Spotless, Error Prone, SpotBugs, JaCoCo, PIT) serão definidos na Fase 3. Quando existirem, documente-os aqui.
+
+### Comandos de build e teste (Fase 2)
+
+Build com o JDK 25 (`--release 21` vem do POM). Por padrão, compila contra o Logback mínimo, 1.5.19:
+
+```bash
+mvn -v                     # deve mostrar "Java version: 25..."
+mvn -B clean verify
+```
+
+PoC e esqueleto contra outra versão do Logback:
+
+```bash
+mvn -B clean verify -Dlogback.version=1.5.38
+mvn -B clean verify -Dlogback.version=1.6.6
+```
+
+Conferência com o JDK 21. O `MAVEN_OPTS` do ambiente traz `--sun-misc-unsafe-memory-access=allow`, que o JDK 21 não aceita, por isso é zerado:
+
+```bash
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 MAVEN_SKIP_RC=true MAVEN_OPTS= mvn -B clean verify
+```
+
+Ausência de dependências em runtime no `core`:
+
+```bash
+mvn -B dependency:tree -pl securedatamasker-core
+```
+
+Observações do ambiente:
+
+- O `mvn` usa o `JAVA_HOME`, não o `update-alternatives`. O JDK 25 é selecionado por `/etc/mavenrc` (`export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64`).
+- O `~/.m2/toolchains.xml` tem os JDKs 21 e 25, mas o `maven-toolchains-plugin` não está configurado nos POMs: isso é da Fase 3.
