@@ -61,6 +61,8 @@
 
     <jspecify.version>1.0.1</jspecify.version>
     <junit.version>6.1.3</junit.version>
+    <!-- D16 spike (docs/phase-3-findings.md): test scope only, regression mode in the normal build. -->
+    <jazzer.version>0.30.0</jazzer.version>
 
     <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
     <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
@@ -114,6 +116,11 @@
         <groupId>org.jspecify</groupId>
         <artifactId>jspecify</artifactId>
         <version>${jspecify.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.code-intelligence</groupId>
+        <artifactId>jazzer-junit</artifactId>
+        <version>${jazzer.version}</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
