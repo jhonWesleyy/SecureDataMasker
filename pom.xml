@@ -78,6 +78,24 @@
     <error-prone.version>2.52.0</error-prone.version>
     <nullaway.version>0.14.3</nullaway.version>
 
+    <!-- SpotBugs + Find Security Bugs (spec 10.3). Exclusions: config/spotbugs-exclude.xml. -->
+    <spotbugs-maven-plugin.version>4.10.5.0</spotbugs-maven-plugin.version>
+    <spotbugs.version>4.10.5</spotbugs.version>
+    <findsecbugs.version>1.14.0</findsecbugs.version>
+
+    <!--
+      JaCoCo: reports are produced on every build. The coverage gate (spec 13.2) is wired but
+      DISABLED: it cannot pass against the Phase 2 stubs, and coverage is not faked.
+      Enabled in Phase 4 by setting jacoco.check.skip to false.
+    -->
+    <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
+    <jacoco.check.skip>true</jacoco.check.skip>
+    <!-- Per-module minimums (spec 13.2); the logback module overrides the line ratio. -->
+    <jacoco.minimum.line>0.95</jacoco.minimum.line>
+    <jacoco.minimum.branch>0.90</jacoco.minimum.branch>
+
+    <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+
     <!-- ADR-009: Spotless with palantir-java-format. -->
     <spotless-maven-plugin.version>3.11.0</spotless-maven-plugin.version>
     <palantir-java-format.version>2.103.0</palantir-java-format.version>
@@ -148,6 +166,11 @@
               <arg>-Xlint:all,-exports</arg>
               <arg>-XDcompilePolicy=simple</arg>
               <arg>--should-stop=ifError=FLOW</arg>
+              <!--
+                NullAway: error, JSpecify mode, for this project's packages (D9).
+                DoNotCallSuggester is off while the API is a skeleton: it flags every method whose
+                body only throws UnsupportedOperationException. Re-enable in Phase 4.
+              -->
               <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=io.github.jhonwesleyy.securedatamasker -XepOpt:NullAway:JSpecifyMode=true -Xep:DoNotCallSuggester:OFF</arg>
               <!--
                 The javac process is forked (toolchain), so .mvn/jvm.config does not reach it:
@@ -225,6 +248,54 @@
           <version>${maven-toolchains-plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>${spotbugs-maven-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.github.spotbugs</groupId>
+              <artifactId>spotbugs</artifactId>
+              <version>${spotbugs.version}</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <effort>Max</effort>
+            <threshold>Low</threshold>
+            <failOnError>true</failOnError>
+            <includeTests>false</includeTests>
+            <xmlOutput>true</xmlOutput>
+            <excludeFilterFile>${maven.multiModuleProjectDirectory}/config/spotbugs-exclude.xml</excludeFilterFile>
+            <plugins>
+              <plugin>
+                <groupId>com.h3xstream.findsecbugs</groupId>
+                <artifactId>findsecbugs-plugin</artifactId>
+                <version>${findsecbugs.version}</version>
+              </plugin>
+            </plugins>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${maven-javadoc-plugin.version}</version>
+          <configuration>
+            <!-- Javadoc lint gate: every doclint group, and any warning fails the build. -->
+            <doclint>all</doclint>
+            <failOnWarnings>true</failOnWarnings>
+            <failOnError>true</failOnError>
+            <!--
+              Must stay false: with quiet=true, maven-javadoc-plugin 3.12.0 does not see the
+              warnings and failOnWarnings silently passes (docs/phase-3-findings.md).
+            -->
+            <quiet>false</quiet>
+          </configuration>
+        </plugin>
+        <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
           <version>${spotless-maven-plugin.version}</version>
@@ -262,6 +333,80 @@
                 </jdk>
               </toolchains>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- Disabled until Phase 4: see jacoco.check.skip. -->
+            <id>check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <skip>${jacoco.check.skip}</skip>
+              <haltOnFailure>true</haltOnFailure>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.minimum.line}</minimum>
+                    </limit>
+                    <limit>
+                      <counter>BRANCH</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.minimum.branch}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>spotbugs</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>javadoc-lint</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
